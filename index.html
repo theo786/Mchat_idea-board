@@ -1,0 +1,283 @@
+<!doctype html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>캐릭터 아이디어 보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 레이아웃: 상단 투입 바 + 필터, 아래 4:5 썸네일 카드 그리드. 사용 처리는 인주 도장 */
+:root{
+  --bg:#f7f5f2; --surface:#ffffff; --sunk:#ece8e2; --fg:#1b1815; --mut:#6f6861;
+  --line:#ddd7cf; --accent:#b8402f; --ok:#2e7d5b; --okbg:#e4f1ea;
+  --display:"Gowun Batang",Georgia,serif;
+  --sans:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171511; --surface:#201d18; --sunk:#2b2721; --fg:#efeae2; --mut:#a49c91;
+  --line:#38332c; --accent:#e0705c; --ok:#4fc08d; --okbg:#18312a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171511; --surface:#201d18; --sunk:#2b2721; --fg:#efeae2; --mut:#a49c91;
+  --line:#38332c; --accent:#e0705c; --ok:#4fc08d; --okbg:#18312a; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--sans)}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 72px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font:700 30px/1.2 var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+.sub{color:var(--mut);font-size:13.5px;margin-top:6px;max-width:62ch}
+.who{display:flex;align-items:center;gap:8px;margin:16px 0 0;font-size:13px;color:var(--mut);flex-wrap:wrap}
+.who input{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);width:150px}
+form.add{display:flex;gap:8px;margin:14px 0 10px;flex-wrap:wrap}
+form.add input{flex:1 1 280px;min-width:0;font:inherit;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg)}
+input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 20px;background:var(--accent);color:#fff;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.att{display:inline-flex;align-items:center;gap:6px;font:inherit;font-weight:700;padding:0 15px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);cursor:pointer}
+.att:hover,.att.on{border-color:var(--accent);color:var(--accent)}
+.prev{display:flex;align-items:center;gap:10px;margin:-2px 0 10px}
+.prev img{width:52px;height:65px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.msg{font-size:13px;color:var(--mut);min-height:22px}
+.bar{display:flex;gap:4px;background:var(--sunk);padding:4px;border-radius:10px;width:max-content;max-width:100%;margin:8px 0 18px}
+.f{all:unset;cursor:pointer;padding:7px 14px;border-radius:7px;font-size:14px;font-weight:500;color:var(--mut);white-space:nowrap}
+.f[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.f .n{font-family:var(--mono);font-size:12px;margin-left:5px;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px}
+.card{position:relative;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:0}
+.tw{position:relative}
+.thumb{display:block;aspect-ratio:4/5;background:var(--sunk);position:relative;overflow:hidden;max-width:100%}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:14px;color:var(--mut);font-size:13px}
+.imgbtn{all:unset;position:absolute;left:8px;bottom:8px;cursor:pointer;font-size:12px;font-weight:700;padding:5px 10px;border-radius:7px;background:rgba(20,18,15,.72);color:#fff;opacity:0;transition:opacity .15s}
+.card:hover .imgbtn,.imgbtn:focus-visible,.card.noimg .imgbtn{opacity:1}
+@media (hover:none){.imgbtn{opacity:1}}
+.body{padding:10px 12px 12px;display:grid;gap:4px;min-width:0}
+.site{font:500 11px var(--mono);color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+.ttl{font-weight:700;font-size:15px;line-height:1.35;color:var(--fg);text-decoration:none;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ttl:hover{text-decoration:underline}
+.note{font-size:13px;color:var(--mut);overflow-wrap:anywhere}
+.nph{opacity:.55}
+.nrow{display:flex;align-items:flex-start;gap:6px}.nrow .note{flex:1;min-width:0}
+.pen{all:unset;cursor:pointer;color:var(--mut);padding:2px;border-radius:5px;display:grid;place-items:center}
+.pen:hover{color:var(--accent);background:var(--sunk)}
+.nedit{display:grid;gap:6px}
+.nedit textarea{font:13px/1.5 var(--sans);padding:7px 9px;border:1px solid var(--accent);border-radius:8px;background:var(--bg);color:var(--fg);resize:vertical;min-width:0;width:100%}
+.nbtns{display:flex;gap:6px}
+.nb{font:inherit;font-size:12px;font-weight:700;border:1px solid var(--line);border-radius:7px;padding:4px 10px;cursor:pointer;background:var(--surface);color:var(--fg)}
+.ns{background:var(--accent);border-color:var(--accent);color:#fff}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.chk{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:13px;font-weight:700;border:1.5px solid var(--line);background:transparent;color:var(--mut);padding:5px 10px;border-radius:8px;cursor:pointer}
+.chk .box{width:16px;height:16px;border:1.5px solid currentColor;border-radius:4px;display:grid;place-items:center;font-size:12px;line-height:1}
+.card.used .chk{border-color:var(--ok);background:var(--okbg);color:var(--ok)}
+.meta{font:12px var(--mono);color:var(--mut);font-variant-numeric:tabular-nums}
+.stamp{position:absolute;top:10px;right:10px;width:48px;height:48px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font:700 24px var(--display);box-shadow:0 2px 10px rgba(0,0,0,.28);transform:rotate(-9deg)}
+.card.used .thumb img{filter:grayscale(.5);opacity:.78}
+.del{all:unset;cursor:pointer;color:var(--mut);font-size:12px;padding:2px 4px}
+.del:hover{color:var(--accent)}
+.empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:52px 16px;border:1.5px dashed var(--line);border-radius:12px}
+body.drag form.add{outline:2px dashed var(--accent);outline-offset:6px;border-radius:12px}
+.card.dropon{outline:3px solid var(--accent);outline-offset:2px}
+.card.dropon .thumb::after{content:"여기 놓으면 이 카드 이미지로";position:absolute;inset:0;display:grid;place-items:center;background:rgba(20,18,15,.66);color:#fff;font-weight:700;font-size:13px;text-align:center;padding:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head><body>
+<div class="wrap">
+  <h1>캐릭터 아이디어 보드</h1>
+  <p class="sub">매너리스챗 캐릭터로 쓸 만한 레퍼런스를 쌓아두는 곳입니다. 링크를 붙여넣거나 이미지를 끌어다 놓으세요. 실제 캐릭터로 제작하면 도장이 찍힙니다.</p>
+
+  <div class="who"><label for="nm">올리는 사람</label><input id="nm" placeholder="이름" autocomplete="name"><span id="whoh">이름을 적어두면 누가 올렸는지 카드에 남습니다.</span></div>
+
+  <form class="add" id="addf" novalidate>
+    <input id="url" type="text" placeholder="링크, 또는 이미지 제목" aria-label="링크 또는 제목">
+    <input id="memo" type="text" placeholder="메모 (선택)" aria-label="메모" style="flex:0 1 220px">
+    <label class="att" id="attl" for="file"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span id="attt">이미지</span></label>
+    <input id="file" type="file" accept="image/*" hidden>
+    <button class="btn" id="addb" type="submit">추가</button>
+  </form>
+  <div class="prev" id="prev" hidden><img id="previmg" alt="첨부할 이미지"><button class="nb" id="prevx" type="button">빼기</button></div>
+  <input id="cardfile" type="file" accept="image/*" hidden>
+  <div class="msg" id="msg" role="status"></div>
+
+  <div class="bar" role="toolbar" aria-label="필터">
+    <button class="f" data-f="all" aria-pressed="true">전체<span class="n" id="n-all">0</span></button>
+    <button class="f" data-f="open" aria-pressed="false">미사용<span class="n" id="n-open">0</span></button>
+    <button class="f" data-f="used" aria-pressed="false">사용함<span class="n" id="n-used">0</span></button>
+  </div>
+  <main class="grid" id="list"><div class="empty">불러오는 중입니다.</div></main>
+</div>
+
+<script>
+const SB="https://ksuiqtlrcenzedtlxyrb.supabase.co", KEY="sb_publishable_mKbG4Q5Q82eypi9lZq-7bA_qeTTOpYb";
+const H={apikey:KEY,Authorization:"Bearer "+KEY};
+const T=SB+"/rest/v1/character_ideas";
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const host=u=>{try{return new URL(u).hostname.replace(/^www\./,"")}catch(e){return ""}};
+const say=t=>{document.getElementById("msg").textContent=t};
+const ls=(k,v)=>{try{return v===undefined?localStorage.getItem(k):localStorage.setItem(k,v)}catch(e){return null}};
+const imgUrl=p=>SB+"/storage/v1/object/public/idea-images/"+p;
+
+let rows=[],filter=ls("ib-f")||"all",pending=null,cardTarget=null;
+const nm=document.getElementById("nm");
+nm.value=ls("ib-nm")||"";
+nm.oninput=()=>ls("ib-nm",nm.value.trim());
+
+async function load(){
+  try{
+    const r=await fetch(T+"?select=*&order=created_at.desc",{headers:H});
+    if(!r.ok)throw 0;
+    rows=await r.json();render();
+  }catch(e){document.getElementById("list").innerHTML='<div class="empty">아이디어를 불러오지 못했습니다. 새로고침해 주세요.</div>'}
+}
+async function patch(id,body){
+  const r=await fetch(T+"?id=eq."+id,{method:"PATCH",headers:{...H,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(body)});
+  if(!r.ok)throw new Error("patch");await load();
+}
+async function upload(f){
+  if(f.size>20*1024*1024)throw new Error("too-big");
+  const ext=(f.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg";
+  const path=Date.now().toString(36)+Math.random().toString(36).slice(2,8)+"."+ext;
+  const r=await fetch(SB+"/storage/v1/object/idea-images/"+path,{method:"POST",headers:{...H,"Content-Type":f.type||"application/octet-stream","x-upsert":"true"},body:f});
+  if(!r.ok)throw new Error("upload");
+  return path;
+}
+
+function setF(f){filter=f;ls("ib-f",f);document.querySelectorAll(".f").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.f===f)));render()}
+document.querySelectorAll(".f").forEach(b=>b.onclick=()=>setF(b.dataset.f));
+
+function render(){
+  document.getElementById("n-all").textContent=rows.length;
+  document.getElementById("n-used").textContent=rows.filter(r=>r.used).length;
+  document.getElementById("n-open").textContent=rows.filter(r=>!r.used).length;
+  const vis=rows.filter(r=>filter==="all"||(filter==="used")===!!r.used);
+  const L=document.getElementById("list");
+  if(!vis.length){L.innerHTML='<div class="empty">'+(rows.length?"이 칸에 해당하는 아이디어가 없습니다.":"아직 아이디어가 없습니다.<br>위에 링크를 붙여넣거나 이미지를 끌어다 놓으세요.")+"</div>";return}
+  L.innerHTML=vis.map(r=>{
+    const t=r.title||r.note&&r.note.slice(0,40)||host(r.url)||"이미지 아이디어";
+    const href=r.url||(r.image_path?imgUrl(r.image_path):"");
+    const open=href?' href="'+esc(href)+'" target="_blank" rel="noopener"':"";
+    const d=(r.created_at||"").slice(5,10).replace("-","/");
+    return '<article class="card'+(r.used?" used":"")+(r.image_path?"":" noimg")+'" data-cid="'+esc(r.id)+'">'
+      +'<div class="tw"><a class="thumb"'+open+' aria-label="'+esc(t)+' 열기">'
+      +(r.image_path?'<img src="'+esc(imgUrl(r.image_path))+'" alt="" loading="lazy">':'<div class="ph">이미지 없음</div>')
+      +(r.used?'<span class="stamp" aria-hidden="true">用</span>':"")+"</a>"
+      +'<button class="imgbtn" data-img="'+esc(r.id)+'">'+(r.image_path?"이미지 바꾸기":"이미지 넣기")+"</button></div>"
+      +'<div class="body"><div class="site">'+esc(r.site||host(r.url)||"이미지")+"</div>"
+      +"<"+(href?"a":"span")+' class="ttl"'+open+">"+esc(t)+"</"+(href?"a":"span")+">"
+      +'<div class="nrow" data-nid="'+esc(r.id)+'"><div class="note">'+(r.note?esc(r.note):'<span class="nph">메모 없음</span>')+"</div>"
+      +'<button class="pen" data-pen="'+esc(r.id)+'" aria-label="메모 수정" title="메모 수정"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button></div>'
+      +'<div class="row"><button class="chk" data-id="'+esc(r.id)+'" aria-pressed="'+!!r.used+'"><span class="box">'+(r.used?"✓":"")+"</span>"+(r.used?"사용함":"사용 체크")+"</button>"
+      +'<span class="meta">'+esc(r.author?r.author+" · ":"")+esc(d)+"</span></div>"
+      +'<div style="text-align:right"><button class="del" data-del="'+esc(r.id)+'">삭제</button></div>'
+      +"</div></article>"}).join("");
+  L.querySelectorAll(".chk").forEach(b=>b.onclick=()=>toggle(b.dataset.id));
+  L.querySelectorAll(".del").forEach(b=>b.onclick=()=>askDel(b));
+  L.querySelectorAll(".pen").forEach(b=>b.onclick=()=>editNote(b.dataset.pen));
+  L.querySelectorAll(".imgbtn").forEach(b=>b.onclick=()=>{cardTarget=b.dataset.img;document.getElementById("cardfile").click()});
+}
+
+async function toggle(id){
+  const r=rows.find(x=>x.id===id);if(!r)return;
+  const v=!r.used;
+  try{await patch(id,{used:v,used_at:v?new Date().toISOString():null});say(v?"사용 처리했습니다.":"사용 표시를 풀었습니다.")}
+  catch(e){say("저장하지 못했습니다. 잠시 후 다시 해주세요.")}
+}
+function askDel(b){
+  if(b.dataset.armed){b.textContent="삭제 중";
+    fetch(T+"?id=eq."+b.dataset.del,{method:"DELETE",headers:H}).then(r=>r.ok?load():say("삭제하지 못했습니다.")).catch(()=>say("삭제하지 못했습니다."));return}
+  b.dataset.armed="1";b.textContent="한 번 더 누르면 삭제";
+  setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="삭제"}},3000);
+}
+function editNote(id){
+  const r=rows.find(x=>x.id===id),box=document.querySelector('.nrow[data-nid="'+CSS.escape(id)+'"]');
+  if(!r||!box)return;
+  box.outerHTML='<div class="nedit"><textarea rows="3" aria-label="메모">'+esc(r.note||"")+'</textarea><div class="nbtns"><button class="nb ns" type="button">저장</button><button class="nb nc" type="button">취소</button></div></div>';
+  const ed=document.querySelector(".nedit"),ta=ed.querySelector("textarea");
+  ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
+  const save=async()=>{ed.querySelector(".ns").disabled=true;
+    try{await patch(id,{note:ta.value.trim()})}catch(e){say("메모를 저장하지 못했습니다.");ed.querySelector(".ns").disabled=false}};
+  ed.querySelector(".ns").onclick=save;ed.querySelector(".nc").onclick=render;
+  ta.onkeydown=e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey))save();if(e.key==="Escape")render()};
+}
+
+function setPending(f){
+  pending=f&&f.type&&f.type.startsWith("image/")?f:null;
+  const p=document.getElementById("prev");p.hidden=!pending;
+  document.getElementById("attl").classList.toggle("on",!!pending);
+  document.getElementById("attt").textContent=pending?"이미지 1장":"이미지";
+  if(pending){const im=document.getElementById("previmg");try{URL.revokeObjectURL(im.src)}catch(e){}im.src=URL.createObjectURL(pending)}
+}
+document.getElementById("file").onchange=e=>{setPending(e.target.files[0]);e.target.value=""};
+document.getElementById("prevx").onclick=()=>setPending(null);
+document.getElementById("cardfile").onchange=async e=>{
+  const f=e.target.files[0];e.target.value="";const id=cardTarget;cardTarget=null;if(!f||!id)return;
+  say("이미지 올리는 중");
+  try{const p=await upload(f);await patch(id,{image_path:p});say("이미지를 넣었습니다.")}
+  catch(err){say(err.message==="too-big"?"20MB 이하 이미지만 올릴 수 있습니다.":"이미지를 올리지 못했습니다.")}
+};
+
+document.addEventListener("paste",e=>{
+  const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(i=>i.type.startsWith("image/"));
+  if(!it)return;e.preventDefault();setPending(it.getAsFile());
+  say("붙여넣은 이미지를 첨부했습니다. 추가를 누르면 카드가 생깁니다.");
+});
+
+let dragT=null;
+const clearDrop=()=>{document.body.classList.remove("drag");document.querySelectorAll(".card.dropon").forEach(c=>c.classList.remove("dropon"))};
+["dragenter","dragover"].forEach(t=>document.addEventListener(t,e=>{
+  e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="copy";
+  document.body.classList.add("drag");
+  const c=e.target.closest&&e.target.closest(".card");
+  document.querySelectorAll(".card.dropon").forEach(x=>{if(x!==c)x.classList.remove("dropon")});
+  if(c)c.classList.add("dropon");
+  clearTimeout(dragT);dragT=setTimeout(clearDrop,250);
+}));
+document.addEventListener("drop",async e=>{
+  e.preventDefault();clearTimeout(dragT);
+  const card=e.target.closest&&e.target.closest(".card");clearDrop();
+  const dt=e.dataTransfer;if(!dt)return;
+  const f=[...(dt.files||[])].find(x=>x.type.startsWith("image/"));
+  if(f&&card&&card.dataset.cid){
+    say("이미지 올리는 중");
+    try{const p=await upload(f);await patch(card.dataset.cid,{image_path:p});say("카드 이미지를 바꿨습니다.")}
+    catch(err){say(err.message==="too-big"?"20MB 이하 이미지만 올릴 수 있습니다.":"이미지를 올리지 못했습니다.")}
+    return}
+  if(f){setPending(f);say("이미지를 첨부했습니다. 제목이나 링크를 적고 추가를 누르세요.");document.getElementById("url").focus();return}
+  const link=(dt.getData("text/uri-list")||dt.getData("text/plain")||"").split("\n").map(s=>s.trim()).find(s=>/^https?:\/\//.test(s));
+  if(link){
+    const isImg=/\.(jpe?g|png|gif|webp|avif)(\?|$)/i.test(link)||/<img/i.test(dt.getData("text/html")||"");
+    if(isImg){say("다른 사이트 이미지는 바로 끌어올 수 없습니다. 이미지를 우클릭해 복사한 뒤 붙여넣거나, 파일로 저장해서 끌어다 놓으세요.");return}
+    document.getElementById("url").value=link;document.getElementById("memo").focus();
+    say("링크를 넣었습니다. 추가를 누르면 카드가 생깁니다.");return}
+  say("이미지 파일이나 링크를 끌어다 놓으세요.");
+});
+
+document.getElementById("addf").addEventListener("submit",async e=>{
+  e.preventDefault();
+  let u=document.getElementById("url").value.trim();
+  const m=document.getElementById("memo").value.trim();
+  if(!u&&!pending)return say("링크를 넣거나 이미지를 첨부해 주세요.");
+  let ttl="";
+  if(u&&!/^https?:\/\//.test(u)){
+    if(!pending)return say("링크는 https:// 로 시작해야 합니다. 이미지를 첨부하면 이 칸은 제목이 됩니다.");
+    ttl=u;u=""}
+  if(u&&rows.some(r=>r.url===u))return say("이미 올라와 있는 링크입니다.");
+  const b=document.getElementById("addb");b.disabled=true;
+  try{
+    let image_path="";
+    if(pending){say("이미지 올리는 중");image_path=await upload(pending)}
+    const r=await fetch(T,{method:"POST",headers:{...H,"Content-Type":"application/json",Prefer:"return=minimal"},
+      body:JSON.stringify({url:u,note:m,site:u?host(u):"이미지",title:ttl,image_path,author:(nm.value||"").trim().slice(0,24),used:false})});
+    if(!r.ok)throw new Error("insert");
+    document.getElementById("url").value="";document.getElementById("memo").value="";setPending(null);
+    say("추가했습니다.");await load();
+  }catch(err){say(err.message==="too-big"?"20MB 이하 이미지만 올릴 수 있습니다.":"추가하지 못했습니다. 잠시 후 다시 해주세요.")}
+  b.disabled=false;
+});
+
+setF(filter);load();
+setInterval(()=>{if(!document.hidden&&!document.querySelector(".nedit"))load()},20000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
+</script>
+</body></html>
