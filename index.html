@@ -356,7 +356,8 @@ document.getElementById("addf").addEventListener("submit",async e=>{
         say("올리는 중 "+(done+1)+"/"+pending.length);
         const path=await upload(f);
         const title=pending.length===1&&typed?typed:baseName(f.name);
-        await insert({url:"",note:m,site:f.type.startsWith("video/")?"영상":"이미지",title,image_path:path,author,used:false});
+        const site=u?host(u):(f.type.startsWith("video/")?"영상":"이미지");
+        await insert({url:u,note:m,site,title,image_path:path,author,used:false});
         done++;
       }
       say(done+"개 추가했습니다.");usage();
