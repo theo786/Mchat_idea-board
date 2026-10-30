@@ -58,6 +58,11 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 .thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block;background:#000}
 .vbadge{position:absolute;left:8px;top:8px;font:700 11px var(--mono);letter-spacing:.06em;padding:3px 7px;border-radius:6px;background:rgba(20,18,15,.74);color:#fff}
 .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:14px;color:var(--mut);font-size:13px}
+.linkph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+  background:linear-gradient(160deg,var(--sunk),var(--surface))}
+.linkph .fav{width:44px;height:44px;border-radius:10px;object-fit:contain;background:var(--surface);padding:6px;border:1px solid var(--line)}
+.linkph span{font:500 12px var(--mono);color:var(--fg);text-transform:uppercase;letter-spacing:.04em;overflow-wrap:anywhere}
+.linkph em{font-style:normal;font-size:11.5px;color:var(--mut);line-height:1.4;max-width:160px}
 .imgbtn{all:unset;position:absolute;left:8px;bottom:8px;cursor:pointer;font-size:12px;font-weight:700;padding:5px 10px;border-radius:7px;background:rgba(20,18,15,.72);color:#fff;opacity:0;transition:opacity .15s}
 .card:hover .imgbtn,.imgbtn:focus-visible,.card.noimg .imgbtn{opacity:1}
 @media (hover:none){.imgbtn{opacity:1}}
@@ -212,6 +217,8 @@ function render(){
     else if(p)media='<img src="'+esc(mediaUrl(p))+'" alt="" loading="lazy">';
     else if(yt)media='<img src="'+esc(ytThumb(yt))+'" alt="" loading="lazy"><span class="vbadge">YOUTUBE</span>';
     else if(isVidLink(r.url))media='<div class="ph">영상 링크</div><span class="vbadge">VIDEO</span>';
+    else if(r.url){const hh=host(r.url);
+      media='<div class="ph linkph"><img class="fav" src="https://www.google.com/s2/favicons?domain='+esc(hh)+'&sz=128" alt="" loading="lazy"><span>'+esc(hh)+'</span><em>썸네일을 넣으려면 이미지를 끌어다 놓으세요</em></div>';}
     else media='<div class="ph">이미지 없음</div>';
     const thumbInner=media+(r.used?'<span class="stamp" aria-hidden="true">用</span>':"");
     const thumb=vid&&p
