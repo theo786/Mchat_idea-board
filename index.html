@@ -66,6 +66,11 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 .imgbtn{all:unset;position:absolute;left:8px;bottom:8px;cursor:pointer;font-size:12px;font-weight:700;padding:5px 10px;border-radius:7px;background:rgba(20,18,15,.72);color:#fff;opacity:0;transition:opacity .15s}
 .card:hover .imgbtn,.imgbtn:focus-visible,.card.noimg .imgbtn{opacity:1}
 @media (hover:none){.imgbtn{opacity:1}}
+.findbtn{all:unset;position:absolute;right:8px;bottom:8px;cursor:pointer;font-size:12px;font-weight:700;
+  padding:5px 10px;border-radius:7px;background:var(--accent);color:#fff;opacity:0;transition:opacity .15s}
+.card:hover .findbtn,.findbtn:focus-visible,.card.noimg .findbtn{opacity:1}
+.findbtn[disabled]{opacity:.6;cursor:default}
+@media (hover:none){.findbtn{opacity:1}}
 .body{padding:10px 12px 12px;display:grid;gap:4px;min-width:0}
 .site{font:500 11px var(--mono);color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
 .ttl{font-weight:700;font-size:15px;line-height:1.35;color:var(--fg);text-decoration:none;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -189,6 +194,15 @@ async function upload(f){
   if(!r.ok)throw new Error("upload");
   return path;
 }
+async function autoThumb(id,url){
+  if(!id||!url)return false;
+  try{
+    const r=await fetch(SB+"/functions/v1/thumb?url="+encodeURIComponent(url),{headers:{"x-board-key":KEY}});
+    const j=await r.json();
+    if(j&&j.path){await patch(id,{image_path:j.path});usage();return true}
+  }catch(e){}
+  return false;
+}
 async function insert(doc){
   const r=await fetch(T,{method:"POST",headers:{...H,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(doc)});
   if(!r.ok)throw new Error("insert");
@@ -226,7 +240,8 @@ function render(){
       : '<a class="thumb"'+open+' aria-label="'+esc(t)+' 열기">'+thumbInner+'</a>';
     return '<article class="card'+(r.used?" used":"")+(p?"":" noimg")+'" data-cid="'+esc(r.id)+'">'
       +'<div class="tw">'+thumb
-      +'<button class="imgbtn" data-img="'+esc(r.id)+'">'+(p?"파일 바꾸기":"파일 넣기")+"</button></div>"
+      +'<button class="imgbtn" data-img="'+esc(r.id)+'">'+(p?"파일 바꾸기":"파일 넣기")+"</button>"
+      +((!p&&r.url&&!yt)?'<button class="findbtn" data-find="'+esc(r.id)+'">썸네일 찾기</button>':"")+"</div>"
       +'<div class="body"><div class="site">'+esc(r.site||host(r.url)||(vid?"영상":"이미지"))+"</div>"
       +"<"+(href?"a":"span")+' class="ttl"'+open+">"+esc(t)+"</"+(href?"a":"span")+">"
       +'<div class="nrow" data-nid="'+esc(r.id)+'"><div class="note">'+(r.note?esc(r.note):'<span class="nph">메모 없음</span>')+"</div>"
@@ -239,6 +254,12 @@ function render(){
   L.querySelectorAll(".del").forEach(b=>b.onclick=()=>askDel(b));
   L.querySelectorAll(".pen").forEach(b=>b.onclick=()=>editNote(b.dataset.pen));
   L.querySelectorAll(".imgbtn").forEach(b=>b.onclick=()=>{cardTarget=b.dataset.img;document.getElementById("cardfile").click()});
+  L.querySelectorAll(".findbtn").forEach(b=>b.onclick=async()=>{
+    const r=rows.find(x=>x.id===b.dataset.find);if(!r)return;
+    b.disabled=true;b.textContent="찾는 중";
+    const got=await autoThumb(r.id,r.url);
+    if(!got){b.disabled=false;b.textContent="썸네일 찾기";say("이 사이트에서는 썸네일을 못 가져옵니다. 이미지를 카드에 끌어다 놓으세요.")}
+  });
 }
 
 async function toggle(id){
@@ -369,8 +390,16 @@ document.getElementById("addf").addEventListener("submit",async e=>{
       }
       say(done+"개 추가했습니다.");usage();
     }else{
-      await insert({url:u,note:m,site:isVidLink(u)?(ytId(u)?"유튜브":"영상"):host(u),title:"",image_path:"",author,used:false});
-      say("추가했습니다.");
+      const res=await fetch(T,{method:"POST",headers:{...H,"Content-Type":"application/json",Prefer:"return=representation"},
+        body:JSON.stringify({url:u,note:m,site:isVidLink(u)?(ytId(u)?"유튜브":"영상"):host(u),title:"",image_path:"",author,used:false})});
+      if(!res.ok)throw new Error("insert");
+      const made=(await res.json())[0];
+      if(ytId(u))say("추가했습니다.");
+      else{
+        say("추가했습니다. 썸네일 찾는 중…");
+        const got=await autoThumb(made&&made.id,u);
+        say(got?"추가하고 썸네일까지 넣었습니다.":"추가했습니다. 썸네일은 못 가져왔어요 — 카드에 이미지를 끌어다 놓으세요.");
+      }
     }
     document.getElementById("url").value="";document.getElementById("memo").value="";setPending([]);
     await load();
